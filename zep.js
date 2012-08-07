@@ -1,56 +1,54 @@
-Array.prototype.unique = function () {
-	var r = new Array();
-	o:for(var i = 0, n = this.length; i < n; i++)
-	{
-		for(var x = 0, y = r.length; x < y; x++)
-		{
-			if(r[x]==this[i])
-			{
-				continue o;
-			}
-		}
-		r[r.length] = this[i];
-	}
-	return r;
-}
-
-// searches for the date within the given <td> element
-// returns a date string, e.g. "2011.03.20"
-function extractDate(td) {
-  return $(td).attr("id").replace("day_", "").replace(/-/g, ".");
-}
-
 function extractDays() {
-  var days = [], currentDay = null;
-  
-  $("#ProjektzeitTableDiv").find(".content table tr").each(function(i, e) {
-    // new day
-    var td = $(e).find("td div.wochentag").parents("td:first");
-    if ($(td).text() != "") {
-      var day = {
-        date: extractDate(td),
-        items: [],
-        hours: 0
-      };
-      currentDay = day;
-      days.push(day);
-    }
-    
-    var work = $($(e).find("td")[7]).text().match(/Reisen/)
-  
-    if (!work) {
-      // new entry
-      var td = $(e).find("td.textkurz span");
-      var fac = $(e).find("td span img[alt=\"fakturierbar\"]");
-      var h = parseFloat($($(e).find("td")[3]).text().replace(/,/, "."));
-      if (fac.length >= 1 && $(td).text() != "") {
-        currentDay.items.push($(td).text());
-        currentDay.hours += h;
-      }
-    }
-  });
-  
-  return days;
+
+    var day_values = [];
+
+    // column indexes starting with zero
+    var column_index_duration = 3;
+
+    // monday, tuesday, thursday, wednesday, friday, saturday, sunday
+    days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+
+    $(days).each(function(day_index, day){
+        // get the duration
+        var day_class = ".tag_" + (day_index + 1);
+        var day_rows = $('tr' + day_class);
+
+        // ensure that the day exists in the listing (saturday and friday might not exist)
+        if (day_rows.length > 0) {
+            // first td is the date on the left site
+            var day_month = $(day_rows).find('div.tag_monat')[0].innerHTML;
+            console.log("*** " + day + " " + day_month);
+
+            var day_sum = 0;
+            var day_items = [];
+
+            day_rows.each(function(process_index,day_row) {
+                // the first cell in the first column of a day represents the left day column
+                // therefore we filter the cells by class 'pz'
+                var process_columns = $(day_row).find('td.pz');
+                var description = $(process_columns).find('div.textkurz>span')[0];
+                var description_text = description ? description.innerHTML : "";
+                var duration_cell = process_columns[column_index_duration];
+                // check whether a duration is given
+                if (duration_cell) {
+                    var duration_text = duration_cell.innerHTML;
+                    if (duration_text) {
+                        var duration = parseFloat(duration_text.replace(",", "."));
+                        // check whether the duration is billable
+                        var is_billable = $(day_row).find('img[alt="fakturierbar"]').length == 1;
+
+                        if (is_billable) {
+                            day_sum += duration;
+                            day_items.push(description_text);
+                            console.log(description_text + " " + duration_text);
+                        }
+                    }
+                }
+            });
+            day_values.push({date: day_month, hours: day_sum, items: day_items});
+        }
+    });
+    return day_values;
 }
 
 function generateHtmlTable(daysArray) {
