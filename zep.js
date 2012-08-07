@@ -71,7 +71,6 @@ function generateHtmlTable(daysArray) {
   for (var i = 0; i < daysArray.length; ++i) {
     daysArray[i].items = daysArray[i].items.unique();
   }
-  daysArray = daysArray.reverse();
 
   html = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' +
     '<title>ZepExtract</title></head><body><div style="position:absolute;top: 0px; left: 0px; margin: 20px auto; width: 50%; padding: 10px; background-color: 10px">' + 
